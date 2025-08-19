@@ -1,27 +1,3 @@
-const bookList = [
-    {
-        title: "A Flower Traveled in My Blood: The Incredible True Story of the Grandmothers Who Fought to Find a Stolen Generation of Children",
-        authors: ["Haley Cohen Gilliland"],
-        genre: "non-fiction",
-        pages: 512,
-        read: false,
-    },
-    {
-        title: "Strata: Stories from Deep Time",
-        authors: ["Laura Poppick"],
-        genre: "non-fiction",
-        pages: 288,
-        read: false,
-    },
-    {
-        title: "Will Eisner: A Comics Biography",
-        authors: ["Steve Weiner", "Dan Mazur (illustrator)"],
-        genre: "non-fiction",
-        pages: 300,
-        read: false,
-    },
-];
-
 // Helpers
 
 function capitalize(string) {
@@ -32,12 +8,115 @@ function capitalize(string) {
 }
 
 function generateRandomPastelColor() {
-    const hue = Math.floor(Math.random() * 361); // Random hue (0-360)
-    const saturation = Math.floor(Math.random() * (40 - 20 + 1)) + 20; // Saturation between 20% and 40%
-    const lightness = Math.floor(Math.random() * (80 - 60 + 1)) + 60; // Lightness between 60% and 80%
 
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    const bookishHues = [
+        { min: 0, max: 30 },   // Reds/Oranges
+        { min: 30, max: 90 },  // Earthy Yellows/Greens
+        { min: 180, max: 240 }, // Muted Blues
+        { min: 270, max: 330 } // Deep Purples/Maroons
+    ];
+    const selectedHueRange = bookishHues[Math.floor(Math.random() * bookishHues.length)];
+    const hue = Math.floor(Math.random() * (selectedHueRange.max - selectedHueRange.min + 1)) + selectedHueRange.min;
+    const saturation = Math.floor(Math.random() * (50 - 20 + 1)) + 20; // 20-50%
+    const lightness = Math.floor(Math.random() * (70 - 30 + 1)) + 30; // 30-70%
+    const r = Math.floor(Math.random() * 150) + 50; // 50-200
+    const g = Math.floor(Math.random() * 150) + 50; // 50-200
+    const b = Math.floor(Math.random() * 150) + 50; // 50-200
+
+    const toHex = (c) => ("0" + c.toString(16)).slice(-2);
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
+
+const bookList = [
+    {
+        id: crypto.randomUUID(),
+        title: "A Flower Traveled in My Blood: The Incredible True Story of the Grandmothers Who Fought to Find a Stolen Generation of Children",
+        authors: ["Haley Cohen Gilliland"],
+        genre: "non-fiction",
+        pages: 512,
+        read: false,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "Strata: Stories from Deep Time",
+        authors: ["Laura Poppick"],
+        genre: "non-fiction",
+        pages: 288,
+        read: false,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "Will Eisner: A Comics Biography",
+        authors: ["Steve Weiner", "Dan Mazur (illustrator)"],
+        genre: "non-fiction",
+        pages: 300,
+        read: false,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "Rose in Chains",
+        authors: ["Julie Soto"],
+        genre: "fantasy",
+        pages: 464,
+        read: true,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "A Resistance of Witches",
+        authors: ["Morgan Ryan"],
+        genre: "fantasy",
+        pages: 416,
+        read: false,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "Wrath of the Dragons",
+        authors: ["Olivia Rose Darling"],
+        genre: "fantasy",
+        pages: 544,
+        read: false,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "Arcana Academy",
+        authors: ["Elise Kova"],
+        genre: "fantasy",
+        pages: 553,
+        read: false,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "Not Quite Dead Yet",
+        authors: ["Holly Jackson"],
+        genre: "mystery",
+        pages: 392,
+        read: false,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "The World's Greatest Detective and Her Just Okay Assistant",
+        authors: ["Liza Tully"],
+        genre: "mystery",
+        pages: 400,
+        read: true,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "Dead of Summer",
+        authors: ["Jessa Maxwell"],
+        genre: "mystery",
+        pages: 288,
+        read: true,
+    },
+    {
+        id: crypto.randomUUID(),
+        title: "As Good As Dead",
+        authors: ["Holly Jackson"],
+        genre: "mystery",
+        pages: 500,
+        read: false,
+    },
+];
 
 // Object Constructors
 
@@ -73,15 +152,17 @@ function Library(shelves) {
  * @param {number} pages how many pages
  * @param {boolean} read have you read the book
  */
-function Book(title, authors, genre, pages, read) {
+function Book(id, title, authors, genre, pages, read) {
     if (!new.target) {
         throw Error("You must use the 'new' operator to call the constructor");
     }
+    this.id = id;
     this.title = title;
     this.authors = authors;
     this.genre = genre;
     this.pages = pages;
     this.read = read;
+    this.color = generateRandomPastelColor();
 }
 
 // Return room left in shelf in pages.
@@ -151,8 +232,19 @@ function render(library) {
         shelf.books.forEach((book) => {
             const bookContainer = document.createElement("button");
             bookContainer.classList.add("book");
-            bookContainer.setAttribute("style", `width: ${book.pages / 8}px; background-color: ${generateRandomPastelColor()}`);
+            bookContainer.setAttribute("style", `width: ${book.pages / 8}px; background-color: ${book.color}`);
             bookContainer.textContent = book.title.split(":")[0];
+            bookContainer.setAttribute("data-id", book.id);
+            bookContainer.addEventListener("click", (e) => {
+                const id = e.target.dataset.id;
+                library.shelves.forEach((shelf) => shelf.books.forEach((book) => {
+                    if (id === book.id) {
+                        book.read = !book.read;
+                    }
+                    return;
+                }));
+                render(library)
+            });
             shelfContainer.appendChild(bookContainer);
 
             // Create Tooltip
@@ -168,6 +260,7 @@ function render(library) {
             pages.textContent = `${book.pages} pages`;
             const read = document.createElement("span");
             read.textContent = book.read ? "Read" : "Not Read";
+            read.setAttribute("data-read", book.read);
             tooltip.appendChild(title);
             tooltip.appendChild(authors);
             tooltip.appendChild(genre);
@@ -182,17 +275,18 @@ function render(library) {
 
 document.addEventListener("DOMContentLoaded", (event) => {
     // Create shelves
-    const nonfiction = new Shelf(4000, "non-fiction");
-    const fantasy = new Shelf(3000, "fantasy");
-    const mystery = new Shelf(3000, "mystery");
+    const nonfiction = new Shelf(5000, "non-fiction");
+    const fantasy = new Shelf(4000, "fantasy");
+    const mystery = new Shelf(2000, "mystery");
+    const scifi = new Shelf(3000, "sci-fi");
 
     // Create library and add shelves
-    const library = new Library([nonfiction, fantasy, mystery]);
+    const library = new Library([nonfiction, fantasy, mystery, scifi]);
 
     // Add books to library
     bookList.forEach((b) => {
-        const { title, authors, genre, pages, read } = b;
-        const book = new Book(title, authors, genre, pages, read);
+        const { id, title, authors, genre, pages, read } = b;
+        const book = new Book(id, title, authors, genre, pages, read);
         library.addBook(book);
     });
 
@@ -211,12 +305,13 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const addBook = document.getElementById("addBook");
     addBook.addEventListener("click", (e) => {
         e.preventDefault();
+        const id = crypto.randomUUID();
         const title = document.getElementById("title").value;
         const authors = document.getElementById("authors").value.split(", ");
         const genre = document.getElementById("genre").value;
         const pages = Number(document.getElementById("pages").value);
         const read = document.getElementById("read").checked;
-        const book = new Book(title, authors, genre, pages, read);
+        const book = new Book(id, title, authors, genre, pages, read);
         dialog.close();
         library.addBook(book);
         render(library);
